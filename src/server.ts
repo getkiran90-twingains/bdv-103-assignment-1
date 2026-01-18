@@ -9,10 +9,10 @@ qs(app);
 
 app.use(cors());
 app.use(bodyParser());
-app.use(bookRoutes.allowedMethods());
 app.use(bookRoutes.routes());
+app.use(bookRoutes.allowedMethods());
 
-const PORT = 3000;
+const PORT = 3001;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
