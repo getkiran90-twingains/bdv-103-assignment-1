@@ -1,20 +1,36 @@
 import Router from '@koa/router';
-import { Book } from '../../adapter/assignment-1';
-import books from '../../mcmasteful-book-list.json';
+import { Book } from '../../adapter/assignment-2';
+import { getDb } from "../db/mongo";
 
 const listRouter = new Router();
 
+/**
+ * GET /books
+ * Optional query param:
+ *   filters=[{"from":10,"to":20},{"from":30}]
+ */
 listRouter.get('/books', async (ctx) => {
-  const filters = ctx.query.filters as Array<{ from?: string, to?: string }> | undefined;
+  // Parse filters from query string (arrives as string)
+  let filters: any = ctx.query.filters;
+
+  if (typeof filters === "string") {
+    try {
+      filters = JSON.parse(filters);
+    } catch {
+      filters = undefined;
+    }
+  }
 
   try {
-    let bookList = readBooksFromJsonData();
+    let bookList = await readBooksFromDb();
 
-    //Todo: Uncomment to Apply filters
+    // Apply filters if provided
     if (filters && Array.isArray(filters) && filters.length > 0) {
       if (!validateFilters(filters)) {
         ctx.status = 400;
-        ctx.body = { error: 'Invalid filters. Each filter must have valid "from" and "to" numbers where from <= to.' };
+        ctx.body = {
+          error: 'Invalid filters. Each filter must have valid "from" and "to" numbers where from <= to.'
+        };
         return;
       }
 
@@ -28,42 +44,43 @@ listRouter.get('/books', async (ctx) => {
   }
 });
 
+/**
+ * Validate filter objects
+ */
 function validateFilters(filters: any): boolean {
-  // Check if filters exist and are an array
   if (!filters || !Array.isArray(filters)) {
     return false;
   }
 
-  // Check each filter object in the array
   return filters.every(filter => {
     const from = filter.from !== undefined ? parseFloat(filter.from) : undefined;
     const to = filter.to !== undefined ? parseFloat(filter.to) : undefined;
 
-    // If from is provided, it must be a valid number
-    if (from !== undefined && isNaN(from)) {
-      return false;
-    }
-
-    // If to is provided, it must be a valid number
-    if (to !== undefined && isNaN(to)) {
-      return false;
-    }
-
-    // If both are provided, from must be <= to
-    if (from !== undefined && to !== undefined && from > to) {
-      return false;
-    }
+    if (from !== undefined && isNaN(from)) return false;
+    if (to !== undefined && isNaN(to)) return false;
+    if (from !== undefined && to !== undefined && from > to) return false;
 
     return true;
   });
 }
 
-function readBooksFromJsonData(): Book[] {
-  return books as Book[];
+/**
+ * Read all books from MongoDB
+ */
+async function readBooksFromDb(): Promise<Book[]> {
+  const db = await getDb();
+  const books = await db.collection<Book>("books").find({}).toArray();
+  return books;
 }
 
-// Filter books by price range - a book matches if it falls within ANY of the filter ranges
-function filterBooks(bookList: Book[], filters: Array<{ from?: string, to?: string }>): Book[] {
+/**
+ * Filter books by price range
+ * A book matches if it falls within ANY filter range
+ */
+function filterBooks(
+  bookList: Book[],
+  filters: Array<{ from?: string; to?: string }>
+): Book[] {
   return bookList.filter(book =>
     filters.some(filter => {
       const from = filter.from !== undefined ? parseFloat(filter.from) : undefined;
