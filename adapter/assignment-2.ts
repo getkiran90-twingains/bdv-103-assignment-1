@@ -14,18 +14,37 @@ export interface Book {
 
 const API_BASE = "http://localhost:3001";
 
-// Helper: normalize DB book to UI book (ensure id exists)
-function normalizeBook(b: any): Book {
+function normalizeBook(b: unknown): Book {
+  if (typeof b !== "object" || b === null) {
+    throw new Error("Invalid book data");
+  }
+
+  const rec = b as Record<string, unknown>;
+
+  const name = typeof rec.name === "string" ? rec.name : "";
+  const author = typeof rec.author === "string" ? rec.author : "";
+  const description =
+    typeof rec.description === "string" ? rec.description : "";
+  const price = typeof rec.price === "number" ? rec.price : 0;
+  const image = typeof rec.image === "string" ? rec.image : "";
+
+  const id = (rec.id ?? rec._id) as string | undefined;
+  const _id = (rec._id ?? rec.id) as string | undefined;
+
   return {
-    ...b,
-    id: b.id ?? b._id,     // UI-friendly id
-    _id: b._id ?? b.id     // keep _id too if present
-  } as Book;
+    name,
+    author,
+    description,
+    price,
+    image,
+    id,
+    _id,
+  };
 }
 
-async function listBooks(filters?: Array<{ from?: number; to?: number }>): Promise<Book[]> {
-  // Your backend expects ctx.query.filters
-  // We’ll send filters as JSON in query string (works reliably).
+async function listBooks(
+  filters?: Array<{ from?: number; to?: number }>
+): Promise<Book[]> {
   const url = new URL(`${API_BASE}/books`);
 
   if (filters && filters.length > 0) {
@@ -38,17 +57,17 @@ async function listBooks(filters?: Array<{ from?: number; to?: number }>): Promi
     throw new Error(`listBooks failed: ${res.status} ${text}`);
   }
 
-  const data = await res.json();
-  return (data ?? []).map(normalizeBook);
+  const data = (await res.json()) as unknown;
+  return Array.isArray(data) ? data.map(normalizeBook) : [];
 }
 
 async function createOrUpdateBook(book: Book): Promise<BookID> {
-  // If book has an id/_id => update, else create
   const id = (book.id ?? book._id) as string | undefined;
 
   if (id) {
     // UPDATE
-    const { id: _ignore1, _id: _ignore2, ...updates } = book as any;
+    const bookObj = book as unknown as Record<string, unknown>;
+    const { id: _ignore1, _id: _ignore2, ...updates } = bookObj;
 
     const res = await fetch(`${API_BASE}/books/${id}`, {
       method: "PUT",
@@ -63,22 +82,22 @@ async function createOrUpdateBook(book: Book): Promise<BookID> {
 
     const updated = normalizeBook(await res.json());
     return (updated.id ?? updated._id) as string;
-  } else {
-    // CREATE
-    const res = await fetch(`${API_BASE}/books`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(book),
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`createBook failed: ${res.status} ${text}`);
-    }
-
-    const created = normalizeBook(await res.json());
-    return (created.id ?? created._id) as string;
   }
+
+  // CREATE
+  const res = await fetch(`${API_BASE}/books`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(book),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`createBook failed: ${res.status} ${text}`);
+  }
+
+  const created = normalizeBook(await res.json());
+  return (created.id ?? created._id) as string;
 }
 
 async function removeBook(bookId: BookID): Promise<void> {
@@ -88,8 +107,6 @@ async function removeBook(bookId: BookID): Promise<void> {
     const text = await res.text().catch(() => "");
     throw new Error(`removeBook failed: ${res.status} ${text}`);
   }
-
-  // backend returns { deleted: true/false } — no need to return anything
 }
 
 const assignment = "assignment-2";

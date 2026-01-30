@@ -1,0 +1,17 @@
+### Create book
+POST http://localhost:3001/books
+Content-Type: application/json
+
+{
+  "name": " Sample Book",
+  "author": "Kiran",
+  "description": "Test book",
+  "price": 10.99,
+  "image": "test.jpg"
+}
+
+### List books
+GET http://localhost:3001/books
+
+### Delete book
+DELETE http://localhost:3001/books/6974be756f11905e525cf994

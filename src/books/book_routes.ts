@@ -11,30 +11,36 @@ const router = new Router();
 router.use(listRouter.routes());
 router.use(listRouter.allowedMethods());
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 // Create book route (MongoDB)
 router.post("/books", async (ctx: Context) => {
-  const payload = ctx.request.body as any;
+  const payloadUnknown: unknown = ctx.request.body;
 
-  if (!payload || typeof payload !== "object") {
+  if (!isRecord(payloadUnknown)) {
     ctx.status = 400;
     ctx.body = { error: "Invalid book payload" };
     return;
   }
 
-const nameOrTitle = payload.name ?? payload.title;
+  // We will build a clean payload object so we don't store weird types
+  const payload: Record<string, unknown> = { ...payloadUnknown };
 
-if (!nameOrTitle || typeof nameOrTitle !== "string" || nameOrTitle.trim() === "") {
-  ctx.status = 400;
-  ctx.body = { error: "Book name/title is required" };
-  return;
-}
+  const nameOrTitle = payload.name ?? payload.title;
 
-// Normalize: store as "name" so UI + dataset stay consistent
-if (!payload.name && payload.title) {
-  payload.name = payload.title;
-  delete payload.title; 
-}
+  if (typeof nameOrTitle !== "string" || nameOrTitle.trim() === "") {
+    ctx.status = 400;
+    ctx.body = { error: "Book name/title is required" };
+    return;
+  }
 
+  // Normalize: store as "name" so UI + dataset stay consistent
+  if (payload.name === undefined && typeof payload.title === "string") {
+    payload.name = payload.title;
+    delete payload.title;
+  }
 
   const db = await getDb();
   const col = db.collection("books");
@@ -48,7 +54,7 @@ if (!payload.name && payload.title) {
 // Update book route (MongoDB)
 router.put("/books/:id", async (ctx: Context) => {
   const id = ctx.params.id;
-  const updates = ctx.request.body as any;
+  const updatesUnknown: unknown = ctx.request.body;
 
   if (!ObjectId.isValid(id)) {
     ctx.status = 400;
@@ -56,14 +62,22 @@ router.put("/books/:id", async (ctx: Context) => {
     return;
   }
 
-  if (!updates || typeof updates !== "object") {
+  if (!isRecord(updatesUnknown)) {
     ctx.status = 400;
     ctx.body = { error: "Invalid update payload" };
     return;
   }
 
+  const updates: Record<string, unknown> = { ...updatesUnknown };
+
   // Prevent changing _id
   if ("_id" in updates) delete updates._id;
+
+  // Optional: normalize title -> name if provided
+  if (updates.name === undefined && typeof updates.title === "string") {
+    updates.name = updates.title;
+    delete updates.title;
+  }
 
   const db = await getDb();
   const col = db.collection("books");

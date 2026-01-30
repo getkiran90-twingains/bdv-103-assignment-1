@@ -1,17 +1,19 @@
-import Router from '@koa/router';
-import { Book } from '../../adapter/assignment-2';
+import Router from "@koa/router";
+import { Book } from "../../adapter/assignment-2";
 import { getDb } from "../db/mongo";
 
 const listRouter = new Router();
+
+type PriceFilter = { from?: string | number; to?: string | number };
 
 /**
  * GET /books
  * Optional query param:
  *   filters=[{"from":10,"to":20},{"from":30}]
  */
-listRouter.get('/books', async (ctx) => {
-  // Parse filters from query string (arrives as string)
-  let filters: any = ctx.query.filters;
+listRouter.get("/books", async (ctx) => {
+  // Parse filters from query string
+  let filters: unknown = ctx.query.filters;
 
   if (typeof filters === "string") {
     try {
@@ -24,17 +26,17 @@ listRouter.get('/books', async (ctx) => {
   try {
     let bookList = await readBooksFromDb();
 
-    // Apply filters if provided
-    if (filters && Array.isArray(filters) && filters.length > 0) {
-      if (!validateFilters(filters)) {
-        ctx.status = 400;
-        ctx.body = {
-          error: 'Invalid filters. Each filter must have valid "from" and "to" numbers where from <= to.'
-        };
-        return;
-      }
-
+    // Apply filters if provided and valid
+    if (filters && validateFilters(filters) && filters.length > 0) {
       bookList = filterBooks(bookList, filters);
+    } else if (filters) {
+      // filters was provided but invalid
+      ctx.status = 400;
+      ctx.body = {
+        error:
+          'Invalid filters. Each filter must have valid "from" and "to" numbers where from <= to.'
+      };
+      return;
     }
 
     ctx.body = bookList;
@@ -47,17 +49,21 @@ listRouter.get('/books', async (ctx) => {
 /**
  * Validate filter objects
  */
-function validateFilters(filters: any): boolean {
-  if (!filters || !Array.isArray(filters)) {
-    return false;
-  }
+function validateFilters(filters: unknown): filters is PriceFilter[] {
+  if (!Array.isArray(filters)) return false;
 
-  return filters.every(filter => {
-    const from = filter.from !== undefined ? parseFloat(filter.from) : undefined;
-    const to = filter.to !== undefined ? parseFloat(filter.to) : undefined;
+  return filters.every((filter) => {
+    if (typeof filter !== "object" || filter === null) return false;
 
-    if (from !== undefined && isNaN(from)) return false;
-    if (to !== undefined && isNaN(to)) return false;
+    const f = filter as Record<string, unknown>;
+    const fromVal = f.from;
+    const toVal = f.to;
+
+    const from = fromVal !== undefined ? Number(fromVal) : undefined;
+    const to = toVal !== undefined ? Number(toVal) : undefined;
+
+    if (from !== undefined && Number.isNaN(from)) return false;
+    if (to !== undefined && Number.isNaN(to)) return false;
     if (from !== undefined && to !== undefined && from > to) return false;
 
     return true;
@@ -77,14 +83,11 @@ async function readBooksFromDb(): Promise<Book[]> {
  * Filter books by price range
  * A book matches if it falls within ANY filter range
  */
-function filterBooks(
-  bookList: Book[],
-  filters: Array<{ from?: string; to?: string }>
-): Book[] {
-  return bookList.filter(book =>
-    filters.some(filter => {
-      const from = filter.from !== undefined ? parseFloat(filter.from) : undefined;
-      const to = filter.to !== undefined ? parseFloat(filter.to) : undefined;
+function filterBooks(bookList: Book[], filters: PriceFilter[]): Book[] {
+  return bookList.filter((book) =>
+    filters.some((filter) => {
+      const from = filter.from !== undefined ? Number(filter.from) : undefined;
+      const to = filter.to !== undefined ? Number(filter.to) : undefined;
 
       const matchesFrom = from === undefined || book.price >= from;
       const matchesTo = to === undefined || book.price <= to;
