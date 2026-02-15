@@ -17,7 +17,7 @@ describe("InMemoryWarehouse", () => {
   test("can create an order", () => {
     const warehouse = new InMemoryWarehouse();
 
-    const { orderId } = warehouse.orderBooks(["book1", "book1", "book2"]);
+    warehouse.orderBooks(["book1", "book1", "book2"]);
 
     const orders = warehouse.listOrders();
 
