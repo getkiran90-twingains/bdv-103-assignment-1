@@ -1,6 +1,7 @@
 import Router from "@koa/router";
 import { Book } from "../../adapter/assignment-2";
 import { getDb } from "../db/mongo";
+import { warehouse } from "../warehouse/warehouse";
 
 const listRouter = new Router();
 
@@ -39,7 +40,10 @@ listRouter.get("/books", async (ctx) => {
       return;
     }
 
-    ctx.body = bookList;
+    ctx.body = bookList.map((b) => ({
+  ...b,
+  stock: warehouse.getTotalStock((b.id ?? b._id) as string),
+}));
   } catch (error) {
     ctx.status = 500;
     ctx.body = { error: `Failed to fetch books due to: ${error}` };

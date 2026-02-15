@@ -6,10 +6,11 @@
     "scripts": {
         "start-server": "ts-node src/server.ts",
         "lint": "eslint .",
-"lint:fix": "eslint . --fix",
-"fmt": "prettier . --write",
-"typecheck": "tsc --noEmit"
-
+        "test": "vitest",
+        "test:ci": "vitest run",
+        "lint:fix": "eslint . --fix",
+        "fmt": "prettier . --write",
+        "typecheck": "tsc --noEmit"
     },
     "keywords": [],
     "author": "",
@@ -33,8 +34,10 @@
         "@types/koa-qs": "^2.0.3",
         "@types/node": "^22.19.3",
         "eslint": "^9.39.2",
+        "mongodb-memory-server": "^11.0.1",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.54.0"
+        "typescript-eslint": "^8.54.0",
+        "vitest": "^4.0.18"
     }
 }

@@ -4,7 +4,7 @@ import { ObjectId } from "mongodb";
 
 import listRouter from "./lists";
 import { getDb } from "../db/mongo";
-
+import { warehouse } from "../warehouse/warehouse";
 const router = new Router();
 
 // mount list routes (GET /books etc.)
@@ -50,9 +50,34 @@ router.post("/books", async (ctx: Context) => {
   ctx.status = 201;
   ctx.body = { ...payload, _id: result.insertedId };
 });
+router.get("/books/:id", async (ctx: Context) => {
+  const id = ctx.params.id;
 
+  if (!ObjectId.isValid(id)) {
+    ctx.status = 400;
+    ctx.body = { error: "Invalid book id" };
+    return;
+  }
+
+  const db = await getDb();
+  const col = db.collection("books");
+  const _id = new ObjectId(id);
+
+  const book = await col.findOne({ _id });
+
+  if (!book) {
+    ctx.status = 404;
+    ctx.body = { error: "Book not found" };
+    return;
+  }
+
+  // Add stock count
+ const stock = warehouse.getTotalStock(id);
+  ctx.status = 200;
+  ctx.body = { ...book, stock };
+});
 // Update book route (MongoDB)
-router.put("/books/:id", async (ctx: Context) => {
+router.put("/adbooks/:id", async (ctx: Context) => {
   const id = ctx.params.id;
   const updatesUnknown: unknown = ctx.request.body;
 
