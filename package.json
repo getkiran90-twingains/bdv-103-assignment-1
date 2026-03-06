@@ -4,14 +4,20 @@
     "description": "This is a template repository for the first assignment in BVD 103 at McMaster Continuing Education.",
     "main": "index.js",
     "scripts": {
-        "start-server": "ts-node src/server.ts",
+        "start-server": "./generate-openapi.sh && npx tsx src/server.ts",
         "lint": "eslint .",
         "test": "vitest",
         "test:ci": "vitest run",
         "lint:fix": "eslint . --fix",
         "fmt": "prettier . --write",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test:api": "vitest run --pool=forks api_tests",
+        "start-server:fast": "npx tsx src/server.ts"
     },
+    "overrides": {
+  "is-generator-function": "1.0.0",
+  "get-generator-function": "1.0.0"
+},
     "keywords": [],
     "author": "",
     "license": "ISC",
@@ -29,6 +35,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
+        "@openapitools/openapi-generator-cli": "^2.30.2",
         "@types/koa": "^2.15.0",
         "@types/koa__cors": "^5.0.1",
         "@types/koa__router": "^12.0.5",

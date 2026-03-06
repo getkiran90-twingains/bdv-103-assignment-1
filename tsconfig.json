@@ -15,7 +15,7 @@
     "moduleResolution": "node16",
     "resolveJsonModule": true,
     "module": "ESNext",
-"moduleResolution": "node",
-"experimentalDecorators": true
+"experimentalDecorators": true,
+"emitDecoratorMetadata": true
   }
 }
