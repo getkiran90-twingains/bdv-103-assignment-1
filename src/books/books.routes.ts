@@ -77,7 +77,7 @@ router.get("/books/:id", async (ctx: Context) => {
   ctx.body = { ...book, stock };
 });
 // Update book route (MongoDB)
-router.put("/adbooks/:id", async (ctx: Context) => {
+router.put("/books/:id", async (ctx: Context) => {
   const id = ctx.params.id;
   const updatesUnknown: unknown = ctx.request.body;
 
