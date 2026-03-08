@@ -11,7 +11,7 @@
         "lint:fix": "eslint . --fix",
         "fmt": "prettier . --write",
         "typecheck": "tsc --noEmit",
-        "test:api": "vitest run --pool=forks api_tests",
+        "test:api": "vitest run --maxWorkers=1 api_tests",
         "start-server:fast": "npx tsx src/server.ts"
     },
     "overrides": {
