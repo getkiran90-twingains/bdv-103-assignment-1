@@ -2,7 +2,7 @@ import Koa from "koa";
 import Router from "@koa/router";
 import { createRequire } from "module";
 
-import bookRoutes from "./books/books.routes";
+//import bookRoutes from "./books/books.routes";
 import warehouseRoutes from "./warehouse/warehouse_routes";
 import { RegisterRoutes } from "../build/routes";
 import swaggerSpec from "../build/swagger.json";
