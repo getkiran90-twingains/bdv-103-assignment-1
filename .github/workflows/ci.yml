@@ -35,5 +35,11 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
       - run: npm ci
+      - run: chmod +x generate-openapi.sh
+      - run: ./generate-openapi.sh
       - run: npm run test:api
