@@ -24,12 +24,12 @@ describe("Warehouse + Orders API (generated client)", () => {
 
     // 1) Place stock: 5 copies on shelf-A
     const placed = await warehouseApi.placeBooksOnShelf({
-      shelf,
-      bookId,
-      placeBooksRequest: { numberOfBooks: 5 },
-    });
-    expect((placed as any).ok).toBe(true);
+  shelf,
+  bookId,
+  placeBooksRequest: { numberOfBooks: 5 },
+});
 
+expect((placed as unknown as { ok?: boolean }).ok).toBe(true);
     // 2) Verify stock is 5
     const before = await warehouseApi.findBookOnShelf({ bookId });
     const beforeCount =
@@ -44,12 +44,13 @@ describe("Warehouse + Orders API (generated client)", () => {
 
     // 4) Fulfil from shelf-A
     const fulfilRes = await ordersApi.fulfilOrder({
-      orderId: orderRes.orderId,
-      fulfilOrderRequest: {
-        booksFulfilled: [{ book: bookId, shelf, numberOfBooks: 2 }],
-      },
-    });
-    expect((fulfilRes as any).ok).toBe(true);
+  orderId: orderRes.orderId,
+  fulfilOrderRequest: {
+    booksFulfilled: [{ book: bookId, shelf, numberOfBooks: 2 }],
+  },
+});
+
+expect((fulfilRes as unknown as { ok?: boolean }).ok).toBe(true);
 
     // 5) Verify stock reduced to 3
     const after = await warehouseApi.findBookOnShelf({ bookId });

@@ -19,18 +19,18 @@ async function waitForReady(baseUrl: string, timeoutMs = 30000) {
 }
 
 export async function startServer(baseUrl = "http://127.0.0.1:3001") {
-  const child = spawn("npm", ["run", "start-server:fast"], {
-    stdio: "inherit",
-    shell: true,
-    env: { ...process.env },
-  });
+const child = spawn("npm", ["run", "start-server:fast"], {
+  stdio: "inherit",
+  shell: true,
+  env: { ...process.env },
+  detached: true,
+});
 
-  // Wait until the server responds (instead of guessing with a timeout)
   await waitForReady(baseUrl);
 
   return async () => {
     // Kill server and wait for it to exit
-    child.kill("SIGTERM");
+  if (child.pid) process.kill(-child.pid, "SIGTERM");
 
     await new Promise<void>((resolve) => {
       const t = setTimeout(() => resolve(), 5000);

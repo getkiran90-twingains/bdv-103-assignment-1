@@ -1,11 +1,22 @@
-import { Body, Delete, Get, Path, Post, Put, Route, Tags, SuccessResponse } from "tsoa";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Path,
+  Post,
+  Put,
+  Route,
+  Tags,
+  SuccessResponse,
+} from "tsoa";
 import { ObjectId } from "mongodb";
 import { getDb } from "../db/mongo";
 import { warehouse } from "../warehouse/warehouse";
 
 export interface Book {
   id?: string;
-  name: string;
+  name?: string;
   author?: string;
   description?: string;
   price?: number;
@@ -15,45 +26,56 @@ export interface Book {
 
 @Route("books")
 @Tags("Books")
-export class BooksController {
+export class BooksController extends Controller {
   @Get()
   public async listBooks(): Promise<Book[]> {
     const db = await getDb();
     const col = db.collection("books");
     const docs = await col.find({}).toArray();
 
-    return docs.map((b: any) => ({
-      ...(b as any),
-      id: (b._id ?? b.id)?.toString(),
-    }));
+    return docs.map((b) => {
+      const rec = b as Record<string, unknown>;
+      const id = (rec["_id"] ?? rec["id"])?.toString();
+      return { ...(rec as unknown as Book), id };
+    });
   }
 
   @Get("{id}")
   public async getBook(@Path() id: string): Promise<Book> {
-    if (!ObjectId.isValid(id)) throw new Error("Invalid book id");
+    if (!ObjectId.isValid(id)) {
+      throw new Error("Invalid book id");
+    }
 
     const db = await getDb();
     const col = db.collection("books");
     const book = await col.findOne({ _id: new ObjectId(id) });
 
-    if (!book) throw new Error("Book not found");
+    if (!book) {
+      throw new Error("Book not found");
+    }
 
-    return { ...(book as any), id, stock: warehouse.getTotalStock(id) };
+    const rec = book as Record<string, unknown>;
+    return {
+      ...(rec as unknown as Book),
+      id,
+      stock: warehouse.getTotalStock(id),
+    };
   }
 
   @Post()
   @SuccessResponse("201", "Created")
-  public async createBook(@Body() body: Record<string, unknown>): Promise<any> {
-    const nameOrTitle = (body as any).name ?? (body as any).title;
+  public async createBook(@Body() body: Record<string, unknown>): Promise<Book> {
+    const nameOrTitle = body.name ?? body.title;
+
     if (typeof nameOrTitle !== "string" || nameOrTitle.trim() === "") {
       throw new Error("Book name/title is required");
     }
 
     const payload: Record<string, unknown> = { ...body };
 
-    if ((payload as any).name === undefined && typeof (payload as any).title === "string") {
-      (payload as any).name = (payload as any).title;
-      delete (payload as any).title;
+    if (payload.name === undefined && typeof payload.title === "string") {
+      payload.name = payload.title;
+      delete payload.title;
     }
 
     const db = await getDb();
@@ -61,22 +83,30 @@ export class BooksController {
     const result = await col.insertOne(payload);
 
     this.setStatus(201);
-    return { ...payload, _id: result.insertedId, id: result.insertedId.toString() };
+    return {
+      ...(payload as unknown as Book),
+      id: result.insertedId.toString(),
+    };
   }
 
   @Put("{id}")
   public async updateBook(
     @Path() id: string,
     @Body() updatesUnknown: Record<string, unknown>
-  ): Promise<any> {
-    if (!ObjectId.isValid(id)) throw new Error("Invalid book id");
+  ): Promise<Book> {
+    if (!ObjectId.isValid(id)) {
+      throw new Error("Invalid book id");
+    }
 
     const updates: Record<string, unknown> = { ...updatesUnknown };
-    if ("_id" in updates) delete (updates as any)._id;
 
-    if ((updates as any).name === undefined && typeof (updates as any).title === "string") {
-      (updates as any).name = (updates as any).title;
-      delete (updates as any).title;
+    if ("_id" in updates) {
+      delete updates._id;
+    }
+
+    if (updates.name === undefined && typeof updates.title === "string") {
+      updates.name = updates.title;
+      delete updates.title;
     }
 
     const db = await getDb();
@@ -84,15 +114,25 @@ export class BooksController {
     const _id = new ObjectId(id);
 
     const result = await col.updateOne({ _id }, { $set: updates });
-    if (result.matchedCount === 0) throw new Error("Book not found");
+
+    if (result.matchedCount === 0) {
+      throw new Error("Book not found");
+    }
 
     const updated = await col.findOne({ _id });
-    return { ...(updated as any), id };
+    const rec = (updated ?? {}) as Record<string, unknown>;
+
+    return {
+      ...(rec as unknown as Book),
+      id,
+    };
   }
 
   @Delete("{id}")
   public async deleteBook(@Path() id: string): Promise<{ deleted: boolean }> {
-    if (!ObjectId.isValid(id)) throw new Error("Invalid book id");
+    if (!ObjectId.isValid(id)) {
+      throw new Error("Invalid book id");
+    }
 
     const db = await getDb();
     const col = db.collection("books");

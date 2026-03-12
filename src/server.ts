@@ -20,8 +20,8 @@ qs(app);
 app.use(cors());
 app.use(bodyParser());
 
-app.use(bookRoutes.routes());
-app.use(bookRoutes.allowedMethods());
+//app.use(bookRoutes.routes());
+//app.use(bookRoutes.allowedMethods());
 
 app.use(warehouseRoutes.routes());
 app.use(warehouseRoutes.allowedMethods());

@@ -17,8 +17,7 @@ describe("Books API (generated client)", () => {
   test("create -> get -> list -> delete", async () => {
     const api = new BooksApi(new Configuration({ basePath }));
 
-    // 1) Create
-    const created: any = await api.createBook({
+    const created = await api.createBook({
       requestBody: {
         name: "Test Book",
         author: "Tester",
@@ -28,18 +27,20 @@ describe("Books API (generated client)", () => {
       },
     });
 
-    const id = created.id ?? created._id;
+    // LOG FIRST so we can see what the server returned
+    console.log("CREATED RESPONSE:", created);
+
+    const rec = created as unknown as { id?: string; _id?: string };
+    const id = rec.id ?? rec._id;
+
     expect(id).toBeTruthy();
 
-    // 2) Get by ID
     const fetched = await api.getBook({ id: String(id) });
     expect(fetched.name).toBe("Test Book");
 
-    // 3) List
     const list = await api.listBooks();
     expect(Array.isArray(list)).toBe(true);
 
-    // 4) Delete
     const del = await api.deleteBook({ id: String(id) });
     expect(del.deleted).toBe(true);
   });

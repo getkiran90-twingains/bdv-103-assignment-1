@@ -1,24 +1,10 @@
 import { Body, Get, Path, Post, Route, Tags } from "tsoa";
 import { warehouse } from "./warehouse";
 import type { BookID, ShelfId, ShelfStock, PlaceBooksRequest } from "../api/types";
-export type BookID = string;
-export type ShelfId = string;
-
-export interface PlaceBooksRequest {
-  numberOfBooks: number;
-}
-
-export interface ShelfStock {
-  shelf: ShelfId;
-  count: number;
-}
 
 @Route("warehouse")
 @Tags("Warehouse")
 export class WarehouseController {
-  /**
-   * Place books on a shelf
-   */
   @Post("shelves/{shelf}/books/{bookId}")
   public async placeBooksOnShelf(
     @Path() shelf: ShelfId,
@@ -33,9 +19,6 @@ export class WarehouseController {
     return { ok: true };
   }
 
-  /**
-   * Find a book on shelves
-   */
   @Get("books/{bookId}")
   public async findBookOnShelf(@Path() bookId: BookID): Promise<ShelfStock[]> {
     return warehouse.findBookOnShelf(bookId);
