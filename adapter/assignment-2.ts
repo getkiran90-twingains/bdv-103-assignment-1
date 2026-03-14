@@ -12,7 +12,7 @@ export interface Book {
   image: string;
 }
 
-const API_BASE = "http://localhost:3001";
+const API_BASE = "/api";
 
 function normalizeBook(b: unknown): Book {
   if (typeof b !== "object" || b === null) {

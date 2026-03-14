@@ -20,7 +20,7 @@ export interface Filter {
 }
 
 // Same backend as assignment-2/3 (your Koa server)
-const API_BASE = "http://localhost:3001";
+const API_BASE = "/api";
 
 function ensureOk(res: Response, label: string): Promise<Response> {
   if (res.ok) return Promise.resolve(res);
