@@ -1,0 +1,25 @@
+{
+  "name": "orders-api",
+ "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npx tsx ./index.ts",
+    "dev": "npx tsx watch ./index.ts",
+    "tsoa": "npx tsoa spec-and-routes"
+  },
+  "dependencies": {
+    "@koa/router": "^15.3.1",
+    "koa": "^2.16.4",
+    "koa-bodyparser": "^4.4.1",
+    "mongodb": "^6.16.0",
+    "tsoa": "^6.6.0"
+  },
+  "devDependencies": {
+    "@tsoa/cli": "^6.6.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "is-generator-function": "1.0.0"
+  }
+}
