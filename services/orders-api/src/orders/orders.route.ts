@@ -30,7 +30,11 @@ const orders: OrderSummary[] = [];
 export class OrdersController {
   @Post()
   public async orderBooks(@Body() body: CreateOrderRequest): Promise<{ orderId: OrderId }> {
-    if (!body || !Array.isArray(body.order) || !body.order.every((x) => typeof x === "string")) {
+    if (
+      !body ||
+      !Array.isArray(body.order) ||
+      !body.order.every((x: unknown) => typeof x === "string")
+    ) {
       throw new Error("order must be an array of book IDs");
     }
 
@@ -49,6 +53,7 @@ export class OrdersController {
     }
 
     const orderId = crypto.randomUUID();
+
     orders.push({
       orderId,
       books: counts,

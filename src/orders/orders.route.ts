@@ -1,25 +1,58 @@
 import { Body, Get, Path, Post, Route, Tags } from "tsoa";
-import { warehouse } from "../warehouse/warehouse";
-import type { OrderId, CreateOrderRequest, FulfilOrderRequest, OrderSummary } from "../api/types";
+import crypto from "crypto";
+
+export type BookID = string;
+export type OrderId = string;
+export type ShelfId = string;
+
+export interface CreateOrderRequest {
+  order: BookID[];
+}
+
+export interface FulfilOrderRequest {
+  booksFulfilled: Array<{
+    book: BookID;
+    shelf: ShelfId;
+    numberOfBooks: number;
+  }>;
+}
+
+export interface OrderSummary {
+  orderId: OrderId;
+  books: Record<BookID, number>;
+}
+
+const orders: OrderSummary[] = [];
 
 @Route("orders")
 @Tags("Orders")
 export class OrdersController {
-  /**
-   * Create an order
-   */
   @Post()
   public async orderBooks(@Body() body: CreateOrderRequest): Promise<{ orderId: OrderId }> {
-    if (!body || !Array.isArray(body.order) || !body.order.every((x) => typeof x === "string")) {
+    if (
+      !body ||
+      !Array.isArray(body.order) ||
+      !body.order.every((x: unknown) => typeof x === "string")
+    ) {
       throw new Error("order must be an array of book IDs");
     }
 
-    return warehouse.orderBooks(body.order);
+    const counts: Record<string, number> = {};
+
+    for (const bookId of body.order) {
+      counts[bookId] = (counts[bookId] ?? 0) + 1;
+    }
+
+    const orderId = crypto.randomUUID();
+
+    orders.push({
+      orderId,
+      books: counts,
+    });
+
+    return { orderId };
   }
 
-  /**
-   * Fulfil an order
-   */
   @Post("{orderId}/fulfil")
   public async fulfilOrder(
     @Path() orderId: OrderId,
@@ -29,15 +62,17 @@ export class OrdersController {
       throw new Error("booksFulfilled must be an array");
     }
 
-    warehouse.fulfilOrder(orderId, body.booksFulfilled);
+    const order = orders.find((o) => o.orderId === orderId);
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
     return { ok: true };
   }
 
-  /**
-   * List orders
-   */
   @Get()
   public async listOrders(): Promise<OrderSummary[]> {
-    return warehouse.listOrders();
+    return orders;
   }
 }

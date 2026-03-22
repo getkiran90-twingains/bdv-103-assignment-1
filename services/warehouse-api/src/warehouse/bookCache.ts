@@ -20,10 +20,13 @@ export async function listWarehouseBookCache(): Promise<WarehouseBookCache[]> {
   const db = await getDb();
   const col = db.collection("book_cache");
 
-  const docs = await col.find({}).toArray();
+  const docs = await col.find({}).toArray() as Array<{
+    bookId?: unknown;
+    name?: unknown;
+  }>;
 
   return docs.map((doc) => ({
-    bookId: String((doc as any).bookId),
-    name: String((doc as any).name),
+    bookId: String(doc.bookId ?? ""),
+    name: String(doc.name ?? ""),
   }));
 }
