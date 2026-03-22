@@ -25,7 +25,6 @@ router.post("/books", async (ctx: Context) => {
     return;
   }
 
-  // We will build a clean payload object so we don't store weird types
   const payload: Record<string, unknown> = { ...payloadUnknown };
 
   const nameOrTitle = payload.name ?? payload.title;
@@ -36,7 +35,6 @@ router.post("/books", async (ctx: Context) => {
     return;
   }
 
-  // Normalize: store as "name" so UI + dataset stay consistent
   if (payload.name === undefined && typeof payload.title === "string") {
     payload.name = payload.title;
     delete payload.title;

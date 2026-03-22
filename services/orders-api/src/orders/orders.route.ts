@@ -1,5 +1,6 @@
 import { Body, Get, Path, Post, Route, Tags } from "tsoa";
 import crypto from "crypto";
+import { findOrdersBookCache } from "./bookCache";
 
 export type BookID = string;
 export type OrderId = string;
@@ -31,6 +32,14 @@ export class OrdersController {
   public async orderBooks(@Body() body: CreateOrderRequest): Promise<{ orderId: OrderId }> {
     if (!body || !Array.isArray(body.order) || !body.order.every((x) => typeof x === "string")) {
       throw new Error("order must be an array of book IDs");
+    }
+
+    for (const bookId of body.order) {
+      const cachedBook = await findOrdersBookCache(bookId);
+
+      if (!cachedBook) {
+        throw new Error(`Invalid book ID: ${bookId}`);
+      }
     }
 
     const counts: Record<string, number> = {};

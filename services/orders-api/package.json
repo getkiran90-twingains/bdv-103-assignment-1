@@ -1,6 +1,6 @@
 {
   "name": "orders-api",
- "version": "1.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "start": "npx tsx ./index.ts",
@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@koa/router": "^15.3.1",
+    "amqplib": "^0.10.9",
     "koa": "^2.16.4",
     "koa-bodyparser": "^4.4.1",
     "mongodb": "^6.16.0",

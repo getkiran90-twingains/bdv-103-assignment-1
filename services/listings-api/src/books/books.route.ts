@@ -12,6 +12,7 @@ import {
 } from "tsoa";
 import { ObjectId } from "mongodb";
 import { getDb } from "../db/mongo";
+import { publishEvent } from "../messaging/publish";
 
 export interface Book {
   id?: string;
@@ -77,10 +78,18 @@ export class BooksController extends Controller {
     const col = db.collection("books");
     const result = await col.insertOne(payload);
 
+    const newBookId = result.insertedId.toString();
+
+    await publishEvent({
+      type: "BookAdded",
+      bookId: newBookId,
+      name: String(payload.name ?? ""),
+    });
+
     this.setStatus(201);
     return {
       ...(payload as unknown as Book),
-      id: result.insertedId.toString(),
+      id: newBookId,
     };
   }
 

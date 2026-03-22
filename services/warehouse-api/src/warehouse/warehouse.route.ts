@@ -1,5 +1,6 @@
 import { Body, Get, Path, Post, Route, Tags } from "tsoa";
 import { warehouse } from "./warehouse";
+import { publishEvent } from "../messaging/publish";
 
 export type BookID = string;
 export type ShelfId = string;
@@ -27,6 +28,15 @@ export class WarehouseController {
     }
 
     warehouse.placeBooksOnShelf(bookId, body.numberOfBooks, shelf);
+
+    const totalStock = warehouse.getTotalStock(bookId);
+
+    await publishEvent({
+      type: "BookStocked",
+      bookId,
+      totalStock,
+    });
+
     return { ok: true };
   }
 

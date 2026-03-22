@@ -11,6 +11,10 @@ export class InMemoryWarehouse {
   private shelves: Record<ShelfId, Record<BookID, number>> = {};
   private orders: Order[] = [];
 
+  public getTotalStock(bookId: string): number {
+  const shelves = this.findBookOnShelf(bookId);
+  return shelves.reduce((sum, item) => sum + item.count, 0);
+}
   placeBooksOnShelf(bookId: BookID, numberOfBooks: number, shelf: ShelfId) {
     if (!this.shelves[shelf]) {
       this.shelves[shelf] = {};
