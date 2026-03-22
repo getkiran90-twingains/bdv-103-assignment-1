@@ -55,10 +55,12 @@ export class BooksController extends Controller {
     }
 
     const rec = book as Record<string, unknown>;
+    const stock = warehouse.getTotalStock(id);
+
     return {
       ...(rec as unknown as Book),
       id,
-      stock: warehouse.getTotalStock(id),
+      stock,
     };
   }
 

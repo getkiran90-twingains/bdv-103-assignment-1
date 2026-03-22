@@ -1,26 +1,12 @@
 import { Body, Get, Path, Post, Route, Tags } from "tsoa";
 import crypto from "crypto";
 
-export type BookID = string;
-export type OrderId = string;
-export type ShelfId = string;
-
-export interface CreateOrderRequest {
-  order: BookID[];
-}
-
-export interface FulfilOrderRequest {
-  booksFulfilled: Array<{
-    book: BookID;
-    shelf: ShelfId;
-    numberOfBooks: number;
-  }>;
-}
-
-export interface OrderSummary {
-  orderId: OrderId;
-  books: Record<BookID, number>;
-}
+import type {
+  OrderId,
+  CreateOrderRequest,
+  FulfilOrderRequest,
+  OrderSummary
+} from "../api/types";
 
 const orders: OrderSummary[] = [];
 

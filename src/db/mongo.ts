@@ -1,25 +1,46 @@
 import { MongoClient, Db } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
-let client: MongoClient | null = null;
 let db: Db | null = null;
+let client: MongoClient | null = null;
 let memoryServer: MongoMemoryServer | null = null;
 
 export async function getDb(): Promise<Db> {
-  if (db) return db;
-
-  let mongoUrl = process.env.MONGO_URI;
-
-  // If no Mongo URI is provided, start in-memory Mongo
-  if (!mongoUrl) {
-    memoryServer = await MongoMemoryServer.create();
-    mongoUrl = memoryServer.getUri();
-    console.log("!!!!Using in-memory MongoDB!!!!");
+  if (db) {
+    return db;
   }
 
-  client = new MongoClient(mongoUrl);
-  await client.connect();
+  const mongoUri = process.env.MONGO_URI;
 
-  db = client.db("assignment-db");
+  if (mongoUri) {
+    client = new MongoClient(mongoUri);
+    await client.connect();
+    db = client.db("app");
+    return db;
+  }
+
+  console.warn("!!!!Using in-memory MongoDB!!!!");
+
+  memoryServer = await MongoMemoryServer.create();
+  const uri = memoryServer.getUri();
+
+  client = new MongoClient(uri);
+  await client.connect();
+  db = client.db("app");
+
   return db;
+}
+
+export async function closeDb(): Promise<void> {
+  if (client) {
+    await client.close();
+    client = null;
+  }
+
+  if (memoryServer) {
+    await memoryServer.stop();
+    memoryServer = null;
+  }
+
+  db = null;
 }
