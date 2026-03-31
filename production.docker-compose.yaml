@@ -1,0 +1,60 @@
+services:
+  nginx:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - front-end
+      - listings-api
+      - warehouse-api
+      - orders-api
+
+  front-end:
+    image: ghcr.io/getkiran90-twingains/bdv-103-assignment-1/front-end:assignment-8
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mongo-listings:
+    image: mongo
+
+  mongo-warehouse:
+    image: mongo
+
+  mongo-orders:
+    image: mongo
+
+  listings-api:
+    image: ghcr.io/getkiran90-twingains/bdv-103-assignment-1/listings-api:assignment-8
+    environment:
+      PORT: 3001
+      MONGO_URI: mongodb://mongo-listings:27017
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      - mongo-listings
+      - rabbitmq
+
+  warehouse-api:
+    image: ghcr.io/getkiran90-twingains/bdv-103-assignment-1/warehouse-api:assignment-8
+    environment:
+      PORT: 3002
+      MONGO_URI: mongodb://mongo-warehouse:27017
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      - mongo-warehouse
+      - rabbitmq
+
+  orders-api:
+    image: ghcr.io/getkiran90-twingains/bdv-103-assignment-1/orders-api:assignment-8
+    environment:
+      PORT: 3003
+      MONGO_URI: mongodb://mongo-orders:27017
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      - mongo-orders
+      - rabbitmq
