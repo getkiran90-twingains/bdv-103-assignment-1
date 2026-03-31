@@ -12,9 +12,8 @@ services:
       - orders-api
 
   front-end:
-    image: ghcr.io/mcmastercce/bvd-103-mcmasterful-books/mcmasterful-books-docker:main
-    volumes:
-      - ./adapter:/source/adapter
+    build:
+      context: ./adapter
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -32,11 +31,8 @@ services:
     image: mongo
 
   listings-api:
-    image: node:20
-    working_dir: /app
-    volumes:
-      - ./services/listings-api:/app
-    command: sh -c "npm install && npm run tsoa && npm run start"
+    build:
+      context: ./services/listings-api
     environment:
       PORT: 3001
       MONGO_URI: mongodb://mongo-listings:27017
@@ -46,11 +42,8 @@ services:
       - rabbitmq
 
   warehouse-api:
-    image: node:20
-    working_dir: /app
-    volumes:
-      - ./services/warehouse-api:/app
-    command: sh -c "npm install && npm run tsoa && npm run start"
+    build:
+      context: ./services/warehouse-api
     environment:
       PORT: 3002
       MONGO_URI: mongodb://mongo-warehouse:27017
@@ -60,11 +53,8 @@ services:
       - rabbitmq
 
   orders-api:
-    image: node:20
-    working_dir: /app
-    volumes:
-      - ./services/orders-api:/app
-    command: sh -c "npm install && npm run tsoa && npm run start"
+    build:
+      context: ./services/orders-api
     environment:
       PORT: 3003
       MONGO_URI: mongodb://mongo-orders:27017
@@ -72,4 +62,3 @@ services:
     depends_on:
       - mongo-orders
       - rabbitmq
-
