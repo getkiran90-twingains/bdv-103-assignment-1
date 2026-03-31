@@ -1,0 +1,66 @@
+name: Build and Publish Docker Images
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - "assignment-8*"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tag
+        id: vars
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG=main" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push front-end
+        uses: docker/build-push-action@v6
+        with:
+          context: ./adapter
+          push: true
+          tags: |
+            ghcr.io/getkiran90-twingains/bdv-103-assignment-1/front-end:${{ steps.vars.outputs.TAG }}
+
+      - name: Build and push listings-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services/listings-api
+          push: true
+          tags: |
+            ghcr.io/getkiran90-twingains/bdv-103-assignment-1/listings-api:${{ steps.vars.outputs.TAG }}
+
+      - name: Build and push warehouse-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services/warehouse-api
+          push: true
+          tags: |
+            ghcr.io/getkiran90-twingains/bdv-103-assignment-1/warehouse-api:${{ steps.vars.outputs.TAG }}
+
+      - name: Build and push orders-api
+        uses: docker/build-push-action@v6
+        with:
+          context: ./services/orders-api
+          push: true
+          tags: |
+            ghcr.io/getkiran90-twingains/bdv-103-assignment-1/orders-api:${{ steps.vars.outputs.TAG }}
